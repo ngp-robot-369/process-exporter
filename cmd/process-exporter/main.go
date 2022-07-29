@@ -176,6 +176,8 @@ func main() {
 			"log debugging information to stdout")
 		showVersion = flag.Bool("version", false,
 			"print version information and exit")
+		whitelist = flag.String("whitelist", "",
+			"alternative way to set configure capture list")
 	)
 	flag.Parse()
 
@@ -194,7 +196,19 @@ func main() {
 
 	var matchnamer common.MatchNamer
 
-	if *configPath != "" {
+	if *whitelist != "" {
+		list := strings.Split(*whitelist, "|")
+		data := GenWhitelistConfig(list)
+		cfg, err := config.GetConfig(data, *debug)
+		if err != nil {
+			log.Fatalf("error making config from whitelist %q: %v", *whitelist, err)
+		}
+		matchnamer = cfg.MatchNamers
+		if *debug {
+			log.Printf("using config matchnamer: %v", cfg.MatchNamers)
+		}
+
+	} else if *configPath != "" {
 		if *nameMapping != "" || *procNames != "" {
 			log.Fatalf("-config.path cannot be used with -namemapping or -procnames")
 		}

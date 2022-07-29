@@ -5,6 +5,7 @@ import (
 
 	seq "github.com/ncabatoff/go-seq/seq"
 	common "github.com/ncabatoff/process-exporter"
+	"github.com/ncabatoff/process-exporter/patches"
 )
 
 type (
@@ -135,7 +136,11 @@ func (g *Grouper) groups(tracked []Update) GroupByName {
 	// Now add any groups that were observed in the past but aren't running now.
 	for gname, gcounts := range g.groupAccum {
 		if _, ok := groups[gname]; !ok {
-			groups[gname] = Group{Counts: gcounts}
+			if patches.ExportLostGroups {
+				groups[gname] = Group{Counts: gcounts}
+			} else {
+				delete(g.groupAccum, gname)
+			}
 		}
 	}
 
